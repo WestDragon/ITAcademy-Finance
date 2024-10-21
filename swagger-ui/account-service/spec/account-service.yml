@@ -1,0 +1,397 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Управление личными финансами
+  contact:
+    name: ITAcademy
+    url: http://it-academy.by
+
+servers:
+  - url: http://{host}:{port}
+    description: custom server
+    variables:
+      host:
+        description: host name
+        default: localhost
+      port:
+        description: port value
+        default: "8080"
+
+tags:
+  - name: "Счета"
+    description: "Информация о Ваших личных счетах в которых вы храните ваши деньги"
+  - name: "Операции"
+    description: "Информация об операциях проводимых на ваших счетах"
+
+paths:
+  /api/v1/account:
+    post:
+      tags:
+        - "Счета"
+      summary: "Добавление нового счёта"
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/CreateAccount"
+      responses:
+        '201':
+          description: "Счёт добавлен в ваш профиль"
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+    get:
+      tags:
+        - "Счета"
+      summary: "Получить страницу счетов текущего пользователя"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Номер страницы
+          required: false
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Размер страницы
+          required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOfAccount'
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+  /api/v1/account/{uuid}:
+    get:
+      tags:
+        - "Счета"
+      summary: "Получить информацию по счёту"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          description: "Идентификатор счёта"
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+  /api/v1/account/{uuid}/dt_update/{dt_update}:
+    put:
+      tags:
+        - "Счета"
+      summary: Редактировать информацию о счёте
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          description: Идентификатор счёта в котором создаём операцию
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: dt_update
+          required: true
+          schema:
+            type: string
+            format: int64
+          description: Дата последнего обновления записи
+      requestBody:
+        $ref: "#/components/requestBodies/CreateAccount"
+      responses:
+        '200':
+          description: "Счёт обновлён"
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+  /api/v1/account/{uuid}/operation:
+    post:
+      tags:
+        - "Операции"
+      summary: Добавление операции по счёту
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          description: Идентификатор счёта в котором создаём операцию
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        $ref: "#/components/requestBodies/CreateOperation"
+      responses:
+        '201':
+          description: "Операция добавлена к счёту"
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+    get:
+      tags:
+        - "Операции"
+      summary: Получить страницу операций по счёту
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          description: "Идентификатор счёта по которому получаем операции"
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Номер страницы
+          required: false
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Размер страницы
+          required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOfOperation'
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+  /api/v1/account/{uuid}/operation/{uuid_operation}/dt_update/{dt_update}:
+    put:
+      tags:
+        - "Операции"
+      summary: Редактировать информацию об операции на счёте
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          description: Идентификатор счёта в котором редактируем операцию
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: uuid_operation
+          description: Идентификатор операции в котором редактируем
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: dt_update
+          required: true
+          schema:
+            type: string
+            format: int64
+          description: Дата последнего обновления записи
+      requestBody:
+        $ref: "#/components/requestBodies/CreateOperation"
+      responses:
+        '200':
+          description: "Операция изменена"
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+    delete:
+      tags:
+        - "Операции"
+      summary: Удалить операцию на счёте
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          description: Идентификатор счёта в котором редактируем операцию
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: uuid_operation
+          description: Идентификатор операции в котором редактируем
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: dt_update
+          required: true
+          schema:
+            type: string
+            format: int64
+          description: Дата последнего обновления записи
+      responses:
+        '200':
+          description: "Операция удалена"
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      $ref: '../../common-lib.yml#/components/securitySchemes/bearerAuth'
+  requestBodies:
+    CreateAccount:
+      description: Тело для создания Счёта
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Account'
+    CreateOperation:
+      description: Тело для создания операции по счёту
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Operation'
+  schemas:
+    Account:
+      type: object
+      description: Счёт
+      allOf:
+        - $ref: '../../common-lib.yml#/components/schemas/t_base_essence'
+      properties:
+        title:
+          type: string
+          description: "Наименование счёта"
+        description:
+          type: string
+          description: "Описание счёта"
+        balance:
+          type: number
+          description: "Текущий баланс"
+          readOnly: true
+        type:
+          type: string
+          description: |
+            Тип счёта:
+              * `CASH` - Наличные деньги
+              * `BANK_ACCOUNT` - Счёт в банке
+              * `BANK_DEPOSIT` - Депозит в банке
+          enum:
+            - "CASH"
+            - "BANK_ACCOUNT"
+            - "BANK_DEPOSIT"
+        currency:
+          type: string
+          format: uuid
+          description: Валюта счёта
+
+    Operation:
+      type: object
+      description: Операция над счётом
+      allOf:
+        - $ref: '../../common-lib.yml#/components/schemas/t_base_essence'
+      properties:
+        date:
+          description: Дата\время операции (linux time)
+          type: integer
+          format: int64
+        description:
+          type: string
+          description: "Описание операции"
+        category:
+          type: string
+          format: uuid
+          description: Категория операции
+        value:
+          type: number
+          description: |
+            Сумма операции:
+              * Отрицательная сумма - списание
+              * Положительная - пополнение
+        currency:
+          type: string
+          format: uuid
+          description: Валюта операции
+
+    PageOfAccount:
+      type: object
+      description: Счета
+      allOf:
+        - $ref: '../../common-lib.yml#/components/schemas/t_page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+
+    PageOfOperation:
+      type: object
+      description: Операции
+      allOf:
+        - $ref: '../../common-lib.yml#/components/schemas/t_page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'

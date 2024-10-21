@@ -1,0 +1,218 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Управление личными финансами
+  contact:
+    name: ITAcademy
+    url: http://it-academy.by
+
+servers:
+  - url: http://{host}:{port}
+    description: custom server
+    variables:
+      host:
+        description: host name
+        default: localhost
+      port:
+        description: port value
+        default: "80"
+tags:
+  - name: "Планирование операций"
+    description: Планирование операций по счетам
+
+paths:
+  /api/v1/scheduler/operation:
+    post:
+      tags:
+        - "Планирование операций"
+      summary: "Добавление запланированной операции по счёту"
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/CreateScheduledOperation"
+      responses:
+        '201':
+          description: Операция добавлена к счёту
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+    get:
+      tags:
+        - "Планирование операций"
+      summary: "Получить страницу запланированных операций по счёту"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Номер страницы
+          required: false
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Размер страницы
+          required: false
+        - in: query
+          name: uuid
+          description: "Идентификаторы счётов по которым получаем запланированные операции"
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOfScheduledOperation'
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+  /api/v1/scheduler/operation/{uuid}/dt_update/{dt_update}:
+    put:
+      tags:
+        - "Планирование операций"
+      summary: Редактировать информацию о запланированной операции
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          description: Идентификатор операции которую редактируем
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: dt_update
+          required: true
+          schema:
+            type: string
+            format: int64
+          description: Дата последнего обновления записи
+      requestBody:
+        $ref: "#/components/requestBodies/CreateScheduledOperation"
+      responses:
+        '200':
+          description: Запланированная операция изменена
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      $ref: '../../common-lib.yml#/components/securitySchemes/bearerAuth'
+  requestBodies:
+    CreateScheduledOperation:
+      description: Тело для создания операции по счёту
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ScheduledOperation'
+  schemas:
+    ScheduledOperation:
+      type: object
+      description: Операция над счётом
+      allOf:
+        - $ref: '../../common-lib.yml#/components/schemas/t_base_essence'
+      properties:
+        schedule:
+          $ref: '#/components/schemas/Schedule'
+        operation:
+          $ref: '#/components/schemas/Operation'
+
+    Operation:
+      type: object
+      description: Данные по операции
+      properties:
+        account:
+          description: Уникальный идентификатор счёта
+          type: string
+          format: uuid
+        description:
+          type: string
+          description: "Описание операции"
+        value:
+          type: number
+          description: |
+            Сумма операции:
+              * Отрицательная сумма - списание
+              * Положительная - пополнение
+        currency:
+          type: string
+          format: uuid
+          description: Валюта операции
+        category:
+          type: string
+          format: uuid
+          description: Категория операции
+
+
+    Schedule:
+      type: object
+      description: Настройки работы
+      properties:
+        start_time:
+          description: Дата исполнения запланированной операции (linux time)
+          type: integer
+          format: int64
+        stop_time:
+          description: Дата окончания исполнения запланированной операции (linux time)
+          type: integer
+          format: int64
+        interval:
+          description: Интервал с которым должна происходить операция
+          type: integer
+          format: int64
+        time_unit:
+          type: string
+          description: |
+            Расписание:
+              * `SECOND` - Секунды
+              * `MINUTE` - Минуты
+              * `HOUR` - Часы
+              * `DAY` - Дни
+              * `WEEK` - Недели
+              * `MONTH` - Месяцы
+              * `YEAR` - Года
+          enum:
+            - "SECOND"
+            - "MINUTE"
+            - "HOUR"
+            - "DAY"
+            - "WEEK"
+            - "MONTH"
+            - "YEAR"
+
+    PageOfScheduledOperation:
+      type: object
+      description: Операции
+      allOf:
+        - $ref: '../../common-lib.yml#/components/schemas/t_page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduledOperation'
