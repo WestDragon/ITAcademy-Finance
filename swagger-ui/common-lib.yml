@@ -43,28 +43,28 @@ components:
               message:  Сервер не смог корректно обработать запрос. Пожалуйста обратитесь к администратору
   schemas:
     t_base_essence:
-    type: object
-    description: Описание базовой сущности.
-    required:
-      - uuid
-      - dt_create
-      - dt_update
-    properties:
-      uuid:
-        description: Уникальный идентификатор сущности
-        type: string
-        format: uuid
-        readOnly: true
-      dt_create:
-        description: Дата создания сущности (linux time)
-        type: number
-        format: int64
-        readOnly: true
-      dt_update:
-        description: Дата последнего обновления сущности (linux time)
-        type: integer
-        format: int64
-        readOnly: true
+      type: object
+      description: Описание базовой сущности.
+      required:
+        - uuid
+        - dt_create
+        - dt_update
+      properties:
+        uuid:
+          description: Уникальный идентификатор сущности
+          type: string
+          format: uuid
+          readOnly: true
+        dt_create:
+          description: Дата создания сущности (linux time)
+          type: number
+          format: int64
+          readOnly: true
+        dt_update:
+          description: Дата последнего обновления сущности (linux time)
+          type: integer
+          format: int64
+          readOnly: true
 
     t_page:
       type: object
