@@ -1,0 +1,196 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Управление личными финансами
+  contact:
+    name: ITAcademy
+    url: http://it-academy.by
+
+servers:
+  - url: http://{host}:{port}
+    description: custom server
+    variables:
+      host:
+        description: host name
+        default: localhost
+      port:
+        description: port value
+        default: "80"
+
+tags:
+  - name: "Справочники"
+    description: "Справочники для хранения системных классификаторов"
+
+paths:
+  /api/v1/classifier/currency:
+    post:
+      tags:
+        - "Справочники"
+      summary: Добавление новой валюты
+      security:
+        - bearerAuth: [ADMIN, MANAGER]
+      requestBody:
+        $ref: "#/components/requestBodies/CreateCurrency"
+      responses:
+        '201':
+          description: Валюта добавлена в справочник
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+    get:
+      tags:
+        - "Справочники"
+      summary: Получить страницу валют
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Номер страницы
+          required: false
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Размер страницы
+          required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOfCurrency'
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+
+  /api/v1/classifier/operation/category:
+    post:
+      tags:
+        - "Справочники"
+      summary: Добавление новой категории операции
+      security:
+        - bearerAuth: [ADMIN, MANAGER]
+      requestBody:
+        $ref: "#/components/requestBodies/CreateOperationCategory"
+      responses:
+        '201':
+          description: Категория добавлена в справочник
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+    get:
+      tags:
+        - "Справочники"
+      summary: Получить страницу категорий
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Номер страницы
+          required: false
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Размер страницы
+          required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOfOperationCategory'
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      $ref: '../../common-lib.yml#/components/securitySchemes/bearerAuth'
+  requestBodies:
+    CreateCurrency:
+      description: Тело для валюты
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Currency'
+    CreateOperationCategory:
+      description: Тело для создания категории операции
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OperationCategory'
+  schemas:
+    Currency:
+      description: Валюта
+      allOf:
+        - $ref: '../../common-lib.yml#/components/schemas/t_base_essence'
+      properties:
+        title:
+          type: string
+          description: "Название"
+          example: "USD"
+        description:
+          type: string
+          description: "Расшифровка"
+          example: "Доллар США"
+
+    OperationCategory:
+      type: object
+      description: Категория операции
+      allOf:
+        - $ref: '../../common-lib.yml#/components/schemas/t_base_essence'
+      properties:
+        title:
+          type: string
+          description: "Название"
+          example: "Автомобиль"
+
+    PageOfCurrency:
+      type: object
+      description: Категории
+      allOf:
+        - $ref: '../../common-lib.yml#/components/schemas/t_page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '../../common-lib.yml#/components/schemas/Currency'
+
+    PageOfOperationCategory:
+      type: object
+      description: Категории
+      allOf:
+        - $ref: '../../common-lib.yml#/components/schemas/t_page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationCategory'
