@@ -1,0 +1,166 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Управление личными финансами
+  contact:
+    name: ITAcademy
+    url: http://it-academy.by
+
+servers:
+  - url: http://{host}:{port}
+    description: custom server
+    variables:
+      host:
+        description: host name
+        default: localhost
+      port:
+        description: port value
+        default: "80"
+
+tags:
+  - name: "Безопасность"
+
+paths:
+  /api/v1/audit:
+    get:
+      tags:
+        - "Безопасность"
+      summary: "Получить страницу действий в системе"
+      security:
+        - bearerAuth: [ROLE_ADMIN]
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Номер страницы
+          required: false
+        - in: query
+          name: size
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+          description: Размер страницы
+          required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOfAudit'
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+  /api/v1/audit/{uuid}:
+    get:
+      tags:
+        - "Безопасность"
+      summary: "Получить информацию о действии в системе"
+      security:
+        - bearerAuth: [ROLE_ADMIN]
+      parameters:
+        - in: path
+          name: uuid
+          description: "Идентификатор действия"
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Audit'
+        '400':
+          $ref: '../../common-lib.yml#/components/responses/Bad_Request'
+        '401':
+          $ref: '../../common-lib.yml#/components/responses/Unauthorized'
+        '403':
+          $ref: '../../common-lib.yml#/components/responses/Forbidden'
+        '500':
+          $ref: '../../common-lib.yml#/components/responses/Internal_Server_Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      $ref: '../../common-lib.yml#/components/securitySchemes/bearerAuth'
+  schemas:
+    UserRole:
+      type: string
+      description: |
+        Роль пользователя:
+          * `ADMIN` - Администратор
+          * `USER` - Пользователь
+          * `MANAGER` - Менеджер
+      enum:
+        - "ADMIN"
+        - "USER"
+        - "MANAGER"
+    User:
+      type: object
+      description: Пользователь
+      properties:
+        uuid:
+          description: Уникальный идентификатор сущности
+          type: string
+          format: uuid
+        mail:
+          type: string
+          description: "Электронная почта"
+        fio:
+          type: string
+          description: "ФИО"
+        role:
+          $ref: '#/components/schemas/UserRole'
+
+    EssenceType:
+      type: string
+      description: |
+        Тип сущности:
+          * `USER` - Пользователь
+          * `REPORT` - Отчёт
+      enum:
+        - "USER"
+        - "REPORT"
+    Audit:
+      type: object
+      description: Информация о действии в системе
+      allOf:
+        - $ref: '../../common-lib.yml#/components/schemas/t_base_essence'
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+          description: "Пользователь совершивший действие"
+        text:
+          type: string
+          description: "Описание действия пользователя"
+          example: "Пользователь вошел в систему"
+        type:
+          $ref: '#/components/schemas/EssenceType'
+          description: "Над какой сущностью совершали действие"
+          example: "REPORT"
+        id:
+          type: string
+          description: "Идентификатор сущности указанного типа над которой совершали действие"
+
+    PageOfAudit:
+      type: object
+      description: Страница аудита
+      allOf:
+        - $ref: '../../common-lib.yml#/components/schemas/t_page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Audit'
