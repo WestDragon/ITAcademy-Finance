@@ -1,6 +1,7 @@
 package by.itacademy.user.controller.filter;
 
 import by.itacademy.user.controller.utils.JwtTokenHandler;
+import by.itacademy.user.service.api.IUserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,7 +10,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -22,11 +22,11 @@ import static org.apache.logging.log4j.util.Strings.isEmpty;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-    private final UserDetailsManager userManager;
+    private final IUserService userService;
     private final JwtTokenHandler jwtHandler;
 
-    public JwtFilter(UserDetailsManager userManager, JwtTokenHandler jwtHandler) {
-        this.userManager = userManager;
+    public JwtFilter(IUserService userService, JwtTokenHandler jwtHandler) {
+        this.userService = userService;
         this.jwtHandler = jwtHandler;
     }
 
@@ -50,8 +50,13 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         // Get user identity and set it on the spring security context
-        UserDetails userDetails = userManager
-                .loadUserByUsername(jwtHandler.getUsername(token));
+        UserDetails userDetails = userService
+                .getByLogin(jwtHandler.getUsername(token));
+
+        if (userDetails == null) {
+            chain.doFilter(request, response);
+            return;
+        }
 
         UsernamePasswordAuthenticationToken
                 authentication = new UsernamePasswordAuthenticationToken(
