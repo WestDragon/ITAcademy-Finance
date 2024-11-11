@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://pg_db:5432/user_service?currentSchema=security
+    username: user_app_user
+    password: 123
+
+app:
+  user:
+    storage: JDBC #MEMORY or JDBC
